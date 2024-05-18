@@ -3,7 +3,6 @@ package org.kingfight.kingobsi.listener;
 import org.kingfight.kingobsi.handlers.ConfigHandler;
 import org.kingfight.kingobsi.kingobsiplugin;
 import org.kingfight.kingobsi.model.DamagedBlock;
-import org.kingfight.kingobsi.support.MultiVersion;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,29 +24,22 @@ import com.massivecraft.factions.Faction;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Queue;
-import java.util.LinkedList;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
-import java.util.*;
-import java.util.concurrent.*;
+import com.massivecraft.factions.FPlayer;
 
 public class Listener implements org.bukkit.event.Listener {
 
     private final kingobsiplugin plugin;
-    private final Map<Faction, Long> lastMemberLogoutTime;
     private final Map<Faction, ConcurrentLinkedQueue<Long>> explosionTimestamps;
     private final Set<Faction> factionCooldowns;
 
     public Listener(kingobsiplugin blowablePlugin) {
         this.plugin = blowablePlugin;
-        this.lastMemberLogoutTime = new HashMap<>();
         this.explosionTimestamps = new ConcurrentHashMap<>();
         this.factionCooldowns = ConcurrentHashMap.newKeySet();
     }
@@ -65,6 +57,11 @@ public class Listener implements org.bukkit.event.Listener {
     private void handleExplosionEvent(Location location, List<Block> blockList) {
         Faction faction = getFactionInChunk(location.getChunk());
         if (faction == null) return;
+
+        // Check if the faction is one of the excluded factions
+        if (isExcludedFaction(faction)) {
+            return;
+        }
 
         long currentTime = System.currentTimeMillis();
 
@@ -96,7 +93,7 @@ public class Listener implements org.bukkit.event.Listener {
                 factionCooldowns.remove(faction);
             }, 60L); // 3 seconds in game ticks (20 ticks per second)
         } else {
-            if (isFactionOfflineLongEnough(location)) {
+            if (isFactionOfflineLongEnough(location, faction)) {
                 notifyNearbyPlayers(location, "Explosion annulée car la faction est hors ligne depuis plus de 30 minutes.");
                 blockList.clear(); // Annuler les dégâts
                 return;
@@ -108,6 +105,11 @@ public class Listener implements org.bukkit.event.Listener {
                 }
             }
         }
+    }
+
+    private boolean isExcludedFaction(Faction faction) {
+        String factionName = faction.getTag();
+        return factionName.equals("§2Wilderness") || factionName.equals("§4Warzone") || factionName.equals("§6Safezone");
     }
 
     private List<Block> onBoom(Location source, List<Block> blocks, double damage, double dmgRadius) {
@@ -183,7 +185,7 @@ public class Listener implements org.bukkit.event.Listener {
             }
         }
 
-        if (isFactionOfflineLongEnough(e.getClickedBlock().getLocation())) {
+        if (isFactionOfflineLongEnough(e.getClickedBlock().getLocation(), getFactionInChunk(e.getClickedBlock().getLocation().getChunk()))) {
             notifyNearbyPlayers(e.getClickedBlock().getLocation(), "Interaction annulée car la faction est hors ligne depuis plus de 30 minutes.");
             e.setCancelled(true);
         }
@@ -195,7 +197,7 @@ public class Listener implements org.bukkit.event.Listener {
         if (event.getPlayer() != null) {
             Faction faction = FPlayers.getInstance().getByPlayer(event.getPlayer()).getFaction();
             if (faction != null && getOnlineMembersOfFaction(faction).isEmpty()) {
-                lastMemberLogoutTime.put(faction, System.currentTimeMillis());
+                // This part is no longer needed since we use getLastLoginTime()
             }
         }
     }
@@ -210,19 +212,27 @@ public class Listener implements org.bukkit.event.Listener {
         return onlineMembers;
     }
 
-    private boolean isFactionOfflineLongEnough(Location location) {
-        Faction faction = getFactionInChunk(location.getChunk());
+    private boolean isFactionOfflineLongEnough(Location location, Faction faction) {
+        // Check if the faction is one of the excluded factions
+        if (isExcludedFaction(faction)) {
+            return false;
+        }
+
         if (faction != null) {
             long currentTime = System.currentTimeMillis();
-            Long logoutTime = lastMemberLogoutTime.get(faction);
-            if (logoutTime != null) {
-                long offlineDuration = (currentTime - logoutTime) / 1000; // durée en secondes
-                int time = (int) plugin.getConfig().getDouble("OfflineTime", 30); // Par défaut 30 minutes
+            int offlineTimeThreshold = (int) plugin.getConfig().getDouble("OfflineTime", 30) * 60 * 1000; // 30 minutes in milliseconds
 
-                if (offlineDuration >= time * 60) { // 30 minutes
-                    return true;
+            boolean allMembersOfflineLongEnough = true;
+
+            for (FPlayer fPlayer : faction.getFPlayers()) {
+                long lastLoginTime = fPlayer.getLastLoginTime();
+                if (currentTime - lastLoginTime < offlineTimeThreshold) {
+                    allMembersOfflineLongEnough = false;
+                    break;
                 }
             }
+
+            return allMembersOfflineLongEnough;
         }
         return false;
     }
