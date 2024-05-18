@@ -1,0 +1,6 @@
+name: KingObsi
+version: '1.0-SNAPSHOT'
+main: org.kingfight.kingobsi.kingobsiplugin
+api-version: '1.18'
+author: [Lulunoel2016]
+spigot: 24194

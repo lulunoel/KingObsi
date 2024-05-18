@@ -1,0 +1,13 @@
+org\kingfight\kingobsi\model\DamagedBlock.class
+org\kingfight\kingobsi\kingobsiplugin.class
+org\kingfight\kingobsi\support\MultiVersion.class
+org\kingfight\kingobsi\support\VersionSupport.class
+org\kingfight\kingobsi\handlers\ConfigHandler$1.class
+org\kingfight\kingobsi\FactionUtils.class
+org\kingfight\kingobsi\util\Util.class
+org\kingfight\kingobsi\support\mc_legacy.class
+org\kingfight\kingobsi\listener\Listener.class
+org\kingfight\kingobsi\handlers\ConfigHandler.class
+org\kingfight\kingobsi\listener\WitherListener.class
+org\kingfight\kingobsi\support\mc_newer.class
+org\kingfight\kingobsi\handlers\ReloadCommand.class

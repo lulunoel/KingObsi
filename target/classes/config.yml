@@ -1,0 +1,78 @@
+### Quels mondes et où fonctionne le plugin
+World Settings:
+  world:
+    Enabled: true
+    Bedrock Protection:
+      - -64
+      - -63
+      - -62
+  world_nether:
+    Enabled: true
+    Bedrock Protection:
+      - 0
+      - 1
+      - 2
+      - 126
+      - 127
+  world_the_end:
+    Enabled: true
+    Bedrock Protection: []
+
+### Combien de dommage les blocs envoie
+Explosion Settings:
+  Default:
+    Radius: 3.0
+    Damage: 1.0
+  TNT:
+    Radius: 3.0
+    Damage: 1.0
+  Creeper:
+    Radius: 3.0
+    Damage: 1.0
+  Wither Creation:
+    Radius: 3.0
+    Damage: 1.0
+  Wither Projectile:
+    Radius: 3.0
+    Damage: 1.0
+  Wither Block Eating:
+    Damage: 1.0
+  ## Custom explosion:
+  Custom Explosions:
+    Radius: 3.0
+    Damage: 1.0
+
+### Envoyer un bloc de santé si 100 % de santé.
+Always Send Health: true
+
+### Quelle est l’efficacité des explosions dans l’eau/la lave.
+### Les dégâts sont ainsi multipliés s'ils se trouvent à l'intérieur d'un liquide.
+Liquid Multiplier: 0.0
+OfflineTime: 30
+NotificationRadius: 50.0
+
+### Comment envoyé le message de vie restante.
+Check:
+  Item: 'POTATO'
+  Type: 'RIGHT_CLICK_BLOCK'
+
+### Messages pouvant être traduits.
+### Vous pouvez utiliser <health> au lieu de <percent>%
+Message:
+  Block Health: '&9Block health: &c<percent>% hp'
+
+### Quelle est la santé des blocs.
+### Utilisez le caractère générique <blocks> pour tous les blocs.
+### Vous pouvez également ajouter plus de blocs ici
+Blocks Health:
+  obsidian: 5.0
+  enchantment_table: 5.0
+  anvil: 5.0
+  ender_chest: 5.0
+
+### Régénération de la santé
+### Combien de secondes faudra-t-il pour que la santé du bloc revienne à sa santé maximale.
+Regeneration Time: 3600
+
+### Ne touche pas
+Config Version: 12
