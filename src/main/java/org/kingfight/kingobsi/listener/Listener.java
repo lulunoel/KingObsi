@@ -38,8 +38,8 @@ public class Listener implements org.bukkit.event.Listener {
     private final Map<Faction, ConcurrentLinkedQueue<Long>> explosionTimestamps;
     private final Set<Faction> factionCooldowns;
 
-    public Listener(kingobsiplugin blowablePlugin) {
-        this.plugin = blowablePlugin;
+    public Listener(kingobsiplugin kingobsiplugin) {
+        this.plugin = kingobsiplugin;
         this.explosionTimestamps = new ConcurrentHashMap<>();
         this.factionCooldowns = ConcurrentHashMap.newKeySet();
     }
@@ -152,18 +152,29 @@ public class Listener implements org.bukkit.event.Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent e) {
+        Player player = e.getPlayer();
+        if (player.hasPermission("faction.bypass")) {
+            return; // Allow block break if player has bypass permission
+        }
+
         if (!e.isCancelled()) {
             Block block = e.getBlock();
             DamagedBlock.clean(block);
         }
     }
 
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent e) {
         if (e.useInteractedBlock() != Result.ALLOW) return;
 
+        Player player = e.getPlayer();
+        if (player.hasPermission("faction.bypass")) {
+            return; // Allow interaction if player has bypass permission
+        }
+
         if (e.getAction().toString().equalsIgnoreCase(plugin.getConfig().getString("Check.Type"))
-                && e.getPlayer().getInventory().getItemInHand().getType() == Material.valueOf(plugin.getConfig().getString("Check.Item"))) {
+                && player.getInventory().getItemInHand().getType() == Material.valueOf(plugin.getConfig().getString("Check.Item"))) {
             Block block = e.getClickedBlock();
             if (block != null) {
                 Optional<DamagedBlock> optDmgBlock = DamagedBlock.get(block);
@@ -174,13 +185,13 @@ public class Listener implements org.bukkit.event.Listener {
                     String msg = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("Message.Block Health")
                             .replaceFirst("<percent>", String.valueOf(percent))
                             .replaceFirst("<health>", String.valueOf(health)));
-                    e.getPlayer().sendMessage(msg);
+                    player.sendMessage(msg);
                 } else if (ConfigHandler.makeBlowable(block) && plugin.getConfig().getBoolean("Always Send Health")) {
                     int health = (int) Math.round(ConfigHandler.getDefaultHealth(block.getType()));
                     String msg = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("Message.Block Health")
                             .replaceFirst("<percent>", "100")
                             .replaceFirst("<health>", String.valueOf(health)));
-                    e.getPlayer().sendMessage(msg);
+                    player.sendMessage(msg);
                 }
             }
         }
